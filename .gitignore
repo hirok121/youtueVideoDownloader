@@ -6,6 +6,8 @@ __pycache__/
 # mp4
 *.mp4
 
+tempCodeRunnerFile.py
+
 # C extensions
 *.so
 
