@@ -3,7 +3,11 @@ import customtkinter as ctk
 from pytube import YouTube
 import threading
 
-def download_vedio(video,finishLabel):
+def download_vedio(url,title,finishLabel, progressBar, progressper):
+    yt = YouTube(url, on_progress_callback= lambda stream, chunk, bytes_remaining: on_progress(stream, chunk, bytes_remaining, progressBar, progressper))
+    video = yt.streams.get_lowest_resolution()
+    title.configure(text=yt.title, text_color="white")
+    title.update()
     video.download()
     finishLabel.configure(text="Downloaded Successfully",text_color="green")
 
@@ -17,12 +21,7 @@ def startDownload(link,title, finishLabel, progressBar, progressper):
     progressBar.update()
 
     try:
-        yt = YouTube(url, on_progress_callback= lambda stream, chunk, bytes_remaining: on_progress(stream, chunk, bytes_remaining, progressBar, progressper))
-        video = yt.streams.get_lowest_resolution()
-        title.configure(text=yt.title, text_color="white")
-        title.update()
-
-        thread=threading.Thread(target=download_vedio, args=(video,finishLabel))
+        thread=threading.Thread(target=download_vedio, args=(url,title,finishLabel,progressBar,progressper))
         thread.start()
     except Exception as e:
         finishLabel.configure(text="Error: Invalid", text_color="red")

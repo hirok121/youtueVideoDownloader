@@ -1,24 +1,105 @@
-def startDownload(link, title, finishLabel, progressBar, progressper):
-    url = link.get()
-    finishLabel.configure(text="Downloading...")
-    last_update = [0]  # Use a mutable type like list to hold the last update value
+import tkinter as tk
+import customtkinter as ctk
+from pytube import YouTube
+import threading
 
-    def on_progress(stream, chunk, bytes_remaining):
-        total_size = stream.filesize
-        bytes_downloaded = total_size - bytes_remaining
-        percentage_of_completion = bytes_downloaded / total_size
-        per = int(percentage_of_completion * 100)
+def get_video_by_resolution(yt, resolution):
+    # Get the video stream with the specified resolution
+    video_stream = yt.streams.filter(progressive=True).get_by_resolution(resolution)
 
-        # Update only every 5%
-        if per - last_update[0] >= 5:
-            print(f"{per}%")
-            last_update[0] = per
+    return video_stream
+
+def get_resolutions(yt):
+    # Get all video streams
+    video_streams = yt.streams.filter(progressive=True)
+    print(video_streams)
+    # Get the resolutions of the video streams
+    resolutions = [stream.resolution for stream in video_streams]
+
+    return resolutions
+url="https://www.youtube.com/watch?v=9bZkp7q19f0"
+yt = YouTube(url)
+resolutions = get_resolutions(yt)
+print(resolutions)
+
+
+exit()
+
+def download_vedio(url,title,finishLabel, progressBar, progressper):
+    yt = YouTube(url, on_progress_callback= lambda stream, chunk, bytes_remaining: on_progress(stream, chunk, bytes_remaining, progressBar, progressper))
+    
+    video = yt.streams.get_lowest_resolution()
+    title.configure(text=yt.title, text_color="white")
+    title.update()
+    video.download()
+    finishLabel.configure(text="Downloaded Successfully",text_color="green")
+
+def startDownload(link,title, finishLabel, progressBar, progressper):
+    url=link.get()
+    finishLabel.configure(text="Downloading...",text_color="white")
+    finishLabel.update()
+    progressper.configure(text="0%")
+    progressper.update()
+    progressBar.set(0)
+    progressBar.update()
 
     try:
-        yt = YouTube(url, on_progress_callback=on_progress)
-        video = yt.streams.get_highest_resolution()
-        title.configure(text=yt.title, fg="white")
-        video.download()
-        finishLabel.configure(text="Downloaded Successfully")
+        thread=threading.Thread(target=download_vedio, args=(url,title,finishLabel,progressBar,progressper))
+        thread.start()
     except Exception as e:
-        finishLabel.configure(text=str(e))
+        finishLabel.configure(text="Error: Invalid", text_color="red")
+        # print(e)
+
+def on_progress(stream, chunk, bytes_remaining, progressBar, progressper):
+        total_size = stream.filesize
+        bytes_downloaded = total_size - bytes_remaining
+        percentage_of_compeletion = bytes_downloaded / total_size
+        per = str(int(percentage_of_compeletion*100))+"%"
+        progressBar.set(percentage_of_compeletion)
+        progressper.configure(text=per)
+        progressBar.update()
+        progressper.update()
+
+
+def main():
+    # System Settings
+    ctk.set_appearance_mode( "System" )
+    ctk.set_default_color_theme( "blue" )
+
+    #main app
+    app = ctk.CTk()
+    app.geometry( "720x480" )
+    app.title( "Youtube Downloader" )
+
+    # Adding UI Elements
+    title = ctk.CTkLabel( app, text="Insert a youtube link" )
+    title.pack( padx=10, pady=10 )
+    
+    # link
+    link = tk.StringVar()
+    url_var = ctk.CTkEntry( app, width=350, textvariable=link )
+    url_var.pack(padx=10, pady=10)
+
+    #adding progress bar
+    progressper=ctk.CTkLabel(app, text="0%")
+    progressper.pack(padx=10, pady=10)
+    progressBar = ctk.CTkProgressBar( app, width=400 )
+    progressBar.pack(padx=10, pady=10)
+    progressBar.set(0)
+
+    # Download Button
+    finishLabel = ctk.CTkLabel( app, text="" )
+    finishLabel.pack(padx=10, pady=10)
+    Button = ctk.CTkButton( app, text="Download", command=lambda : startDownload(link,title,finishLabel,progressBar,progressper) )
+    Button.pack(padx=10, pady=10)
+
+    # Run app
+    app.mainloop()
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+
