@@ -9,8 +9,8 @@ def download_vedio(url,title,finishLabel, progressBar, progressper, resulation,c
     try:
         download_cnt.configure(text="0/1")
         download_cnt.update()
-        path=askdirectory(initialdir=".")
         yt = YouTube(url, on_progress_callback= lambda stream, chunk, bytes_remaining: on_progress(stream, chunk, bytes_remaining, progressBar, progressper,clear_Button))
+        path=askdirectory(initialdir=".")
         title.configure(text=yt.title, text_color="white")
         title.update()
         video = yt.streams.get_by_resolution(resulation)
@@ -23,17 +23,25 @@ def download_vedio(url,title,finishLabel, progressBar, progressper, resulation,c
         finishLabel.update()
         download_cnt.configure(text="1/1")
         download_cnt.update()
-        clear_Button.configure(state=ctk.NORMAL)
     except Exception as e:
         finishLabel.configure(text="Error: Invalid", text_color="red")
         # print(e)
+    finally:
+        clear_Button.configure(state=ctk.NORMAL)
 
 def download_playlist(url,title,finishLabel, progressBar, progressper, resulation,clear_Button,download_cnt):
     
+    try:
+        playlist=Playlist(url)
+        urls=playlist.video_urls
+        print(urls)
+    except Exception as e:
+        finishLabel.configure(text="Error: Invalid", text_color="red")
+        clear_Button.configure(state=ctk.NORMAL)
+        # print(e)
+        return
     path=askdirectory(initialdir=".")
-    playlist=Playlist(url)
     #get all vedios urls
-    urls=playlist.video_urls
     download_cnt.configure(text="0/"+str(len(urls)))
     for index,surl in enumerate(urls):
         print(index)
@@ -60,7 +68,7 @@ def download_playlist(url,title,finishLabel, progressBar, progressper, resulatio
             download_cnt.update()
         except Exception as e:
             finishLabel.configure(text="Error: Invalid", text_color="red")
-            print(e)
+            # print(e)
     clear_Button.configure(state=ctk.NORMAL)
         
 
@@ -73,6 +81,10 @@ def startDownload(link,title, finishLabel, progressBar, progressper,res_combo,cl
     playlist=playlist_var.get()
     resulation=res_combo.get()
     url=link.get()
+    if url=="":
+        finishLabel.configure(text="Error: Invalid", text_color="red")
+        clear_Button.configure(state=ctk.NORMAL)
+        return
     finishLabel.configure(text="Downloading...",text_color="white")
     finishLabel.update()
     progressper.configure(text="0%")
@@ -89,6 +101,7 @@ def startDownload(link,title, finishLabel, progressBar, progressper,res_combo,cl
             thread.start()
             
         except Exception as e:
+            clear_Button.configure(state=ctk.NORMAL)
             finishLabel.configure(text="Error: Invalid", text_color="red")
             # print(e)
     else:
@@ -96,6 +109,7 @@ def startDownload(link,title, finishLabel, progressBar, progressper,res_combo,cl
             thread=threading.Thread(target=download_vedio, args=(url,title,finishLabel,progressBar,progressper,resulation,clear_Button,download_cnt))
             thread.start()
         except Exception as e:
+            clear_Button.configure(state=ctk.NORMAL)
             finishLabel.configure(text="Error: Invalid", text_color="red")
         # print(e)
 
